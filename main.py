@@ -100,6 +100,8 @@ def RequestHandler(request: Request):
 
     currentTime = datetime.now()
     expiry = datetime.fromisoformat(value["expiry"])
+    expiry = expiry.replace(tzinfo=None)
+    
     if (expiry - currentTime) > timedelta(seconds=60):
         logger.info("[x] Expired signature received.")
         return Response(request=request, content_type="application/json", body=json.dumps({
@@ -144,7 +146,8 @@ async def main():
             server.poll()
             await asyncio.sleep(0.1)
         except Exception as e:
-            logger.exception(f"[x] Error occurred: {e}")
-            reset()
+            logger.exception(e)
+            if PRODUCTION:
+                reset()
         
 asyncio.run(main())
