@@ -1,4 +1,4 @@
-[English](https://github.com/GateOpenerMicrocontroller/blob/main/README.md) | 繁體中文
+[English](https://github.com/GateOpenerMicrocontroller/blob/main/README.md) | **繁體中文**
 
 # 遠端閘門開門器開發版儲存庫 Gate Opener Microcontroller
 
