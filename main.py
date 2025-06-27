@@ -91,13 +91,6 @@ def RequestHandler(request: Request):
     body: dict[str, str | dict[str, str]] = request.json() or {}
     value: dict[str, str | int] = OrderedDict(body["value"].items())
 
-    if (expiry - currentTime) > timedelta(seconds=60):
-        logger.info("[x] Expired signature received.")
-        return Response(request=request, content_type="application/json", body=json.dumps({
-            "status": "failed",
-            "message": "Signature Expired."
-        }))
-
     if value["nonce"] in nonces:
         logger.info(f"[x] Nonce {value["nonce"]} already used.")
         return Response(request=request, content_type="application/json", body=json.dumps({
@@ -105,11 +98,17 @@ def RequestHandler(request: Request):
             "message": "Nonce already used."
         }), status=Status(403, "Forbidden"))
 
-    jsonValue = json.dumps(OrderedDict(sorted(value.items())), separators=(",", ":"))
-    generatedSignatureBase64 = b2a_base64(hmac.new(hmacKey.encode(), msg=jsonValue, digestmod=hashlib.sha256).digest(), newline=False).decode()
-
     currentTime = datetime.now()
     expiry = datetime.fromisoformat(value["expiry"])
+    if (expiry - currentTime) > timedelta(seconds=60):
+        logger.info("[x] Expired signature received.")
+        return Response(request=request, content_type="application/json", body=json.dumps({
+            "status": "failed",
+            "message": "Signature Expired."
+        }))
+
+    jsonValue = json.dumps(OrderedDict(sorted(value.items())), separators=(",", ":"))
+    generatedSignatureBase64 = b2a_base64(hmac.new(hmacKey.encode(), msg=jsonValue, digestmod=hashlib.sha256).digest(), newline=False).decode()
 
     if generatedSignatureBase64 != body["signature"]:
         logger.info("[x] Invalid signature received.")
