@@ -45,11 +45,15 @@ logger.debug(f"[-] IP Address: {wifi.radio.ipv4_address}")
 
 led = digitalio.DigitalInOut(board.LED)
 led.direction = digitalio.Direction.OUTPUT
-gpios: dict[str, Pin] = {
-    "OPEN": board.GP0,
-    "CLOSE": board.GP15,
-    "STOP": board.GP16
+gpios: dict[str, digitalio.DigitalInOut] = {
+    "OPEN": digitalio.DigitalInOut(board.GP0),
+    "CLOSE": digitalio.DigitalInOut(board.GP15),
+    "STOP": digitalio.DigitalInOut(board.GP16)
 }
+for pinName in gpios:
+    pin = gpios[pinName]
+    pin.direction = digitalio.Direction.OUTPUT
+
 
 pool = SocketPool(wifi.radio)
 server = Server(pool, debug=not PRODUCTION)
@@ -75,10 +79,8 @@ async def ExecuteGPIOCommand(command: str):
         logger.error(f"[x] Invalid GPIO command: {command}")
         return True
 
-    logger.debug(command)
-    gpio = digitalio.DigitalInOut(gpios[command])
+    gpio = gpios[command]
     logger.debug(f"[.] Executing GPIO command: {command}")
-    gpio.direction = digitalio.Direction.OUTPUT
     gpio.value = True
     led.value = False
     await asyncio.sleep(0.5)
