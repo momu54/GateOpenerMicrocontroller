@@ -110,7 +110,6 @@ def RequestHandler(request: Request):
         }))
 
     jsonValue = json.dumps(value, separators=(",", ":"))
-    print(jsonValue)
     generatedSignatureBase64 = b2a_base64(hmac.new(hmacKey.encode(), msg=jsonValue, digestmod=hashlib.sha256).digest(), newline=False).decode()
 
     if generatedSignatureBase64 != body["signature"]:
