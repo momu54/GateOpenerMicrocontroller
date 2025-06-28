@@ -89,7 +89,7 @@ async def ExecuteGPIOCommand(command: str):
 @server.route(path="/", methods="POST")
 def RequestHandler(request: Request):
     body: dict[str, str | dict[str, str]] = request.json() or {}
-    value: dict[str, str | int] = OrderedDict(body["value"].items())
+    value: dict[str, str | int] = OrderedDict(sorted(body["value"].items()))
 
     if value["nonce"] in nonces:
         logger.info(f"[x] Nonce {value["nonce"]} already used.")
@@ -102,14 +102,15 @@ def RequestHandler(request: Request):
     expiry = datetime.fromisoformat(value["expiry"])
     expiry = expiry.replace(tzinfo=None)
     
-    if (expiry - currentTime) > timedelta(seconds=60):
+    if (currentTime - expiry) > timedelta():
         logger.info("[x] Expired signature received.")
         return Response(request=request, content_type="application/json", body=json.dumps({
             "status": "failed",
             "message": "Signature Expired."
         }))
 
-    jsonValue = json.dumps(OrderedDict(sorted(value.items())), separators=(",", ":"))
+    jsonValue = json.dumps(value, separators=(",", ":"))
+    print(jsonValue)
     generatedSignatureBase64 = b2a_base64(hmac.new(hmacKey.encode(), msg=jsonValue, digestmod=hashlib.sha256).digest(), newline=False).decode()
 
     if generatedSignatureBase64 != body["signature"]:
